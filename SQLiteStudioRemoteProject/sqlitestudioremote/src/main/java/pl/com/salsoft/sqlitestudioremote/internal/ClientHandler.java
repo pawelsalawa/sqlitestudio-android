@@ -27,12 +27,14 @@ import java.util.HashMap;
  */
 public class ClientHandler implements Runnable {
 
-    private static enum State {
+    private static enum State
+    {
         READING_SIZE,
         READING_DATA
     }
 
-    private static enum Error {
+    private static enum Error
+    {
         INVALID_FORMAT,
         NO_COMMAND_SPECIFIED,
         UNKNOWN_COMMAND,
@@ -40,7 +42,8 @@ public class ClientHandler implements Runnable {
         ERROR_READING_FROM_CLIENT
     }
 
-    private static enum Command {
+    private static enum Command
+    {
         LIST,
         QUERY,
         DELETE_DB
@@ -81,12 +84,12 @@ public class ClientHandler implements Runnable {
     private boolean denyAccess = false;
 
     public ClientHandler(Socket clientSocket, Context context, ClientJobContainer jobContainer,
-                         AuthService authService, int version) {
+                         AuthService authService) {
         this.clientSocket = clientSocket;
         this.jobContainer = jobContainer;
         this.context = context;
         this.authService = authService;
-        dbService = new SQLiteStudioDbService(context, version);
+        dbService = new SQLiteStudioDbService(context);
         authorized = !authService.isAuthRequired();
     }
 
@@ -125,7 +128,7 @@ public class ClientHandler implements Runnable {
         }
 
         cleanUp();
-        Log.d(Utils.LOG_TAG, "Disconnected client " + ip);
+        Log.d(Utils.LOG_TAG, "Disconnected client "+ip);
     }
 
     private void readClientChannel() {
@@ -147,7 +150,7 @@ public class ClientHandler implements Runnable {
             close();
             return;
         } catch (IOException e) {
-            Log.e(Utils.LOG_TAG, "Error while reading input from client: " + e.getMessage(), e);
+            Log.e(Utils.LOG_TAG, "Error while reading input from client: "+e.getMessage(), e);
             sendError(Error.ERROR_READING_FROM_CLIENT);
             return;
         }
@@ -157,7 +160,7 @@ public class ClientHandler implements Runnable {
             case READING_SIZE: {
                 int size = ByteBuffer.wrap(sizeBuffer).order(ByteOrder.LITTLE_ENDIAN).getInt();
                 if (size > MAX_SIZE) {
-                    Log.e(Utils.LOG_TAG, "Error while reading input from client: maximum size exceeded: " + size);
+                    Log.e(Utils.LOG_TAG, "Error while reading input from client: maximum size exceeded: "+size);
                     sendError(Error.ERROR_READING_FROM_CLIENT);
                     return;
                 }
@@ -170,7 +173,7 @@ public class ClientHandler implements Runnable {
                 try {
                     str = new String(dataBuffer, "UTF-8");
                 } catch (UnsupportedEncodingException e) {
-                    Log.e(Utils.LOG_TAG, "Error while reading data from client: " + e.getMessage(), e);
+                    Log.e(Utils.LOG_TAG, "Error while reading data from client: "+e.getMessage(), e);
                     sendError(Error.ERROR_READING_FROM_CLIENT);
                     return;
                 }
@@ -201,7 +204,7 @@ public class ClientHandler implements Runnable {
             return;
         }
 
-        HashMap<String, Object> map = (HashMap<String, Object>) JsonConverter.fromJsonValue(json);
+        HashMap<String,Object> map = (HashMap<String,Object>)JsonConverter.fromJsonValue(json);
 
         if (!authorized) {
             authorize(map);
@@ -226,7 +229,7 @@ public class ClientHandler implements Runnable {
                 send(DBLIST_KEY, dbService.getDbList());
                 break;
             case QUERY:
-                execAndRespond(map.get(DBNAME_KEY), "" + map.get(QUERY_KEY));
+                execAndRespond(map.get(DBNAME_KEY), ""+map.get(QUERY_KEY));
                 break;
             case DELETE_DB:
                 deleteDbAndRespond(map.get(DBNAME_KEY));
@@ -270,7 +273,7 @@ public class ClientHandler implements Runnable {
         }
 
         String dbNameStr = dbName.toString();
-        HashMap<String, Object> map = new HashMap<>();
+        HashMap<String,Object> map = new HashMap<>();
         QueryResults results = dbService.exec(dbNameStr, data);
         if (results.isError()) {
             map.put(ERROR_CODE_KEY, results.getErrorCode());
@@ -291,12 +294,12 @@ public class ClientHandler implements Runnable {
     }
 
     private void send(String key, Object value) {
-        HashMap<String, Object> map = new HashMap<>();
+        HashMap<String,Object> map = new HashMap<>();
         map.put(key, value);
         send(map);
     }
 
-    private void send(HashMap<String, Object> map) {
+    private void send(HashMap<String,Object> map) {
         send(JsonConverter.toJsonValue(map).toString());
     }
 

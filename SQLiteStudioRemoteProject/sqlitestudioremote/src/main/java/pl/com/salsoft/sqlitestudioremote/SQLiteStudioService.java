@@ -28,12 +28,12 @@ public class SQLiteStudioService extends Service {
     private List<String> ipBlackList = new ArrayList<>();
     private List<String> ipWhiteList = new ArrayList<>();
 
-    public void start(Context context, int version) {
+    public void start(Context context) {
         if (running) {
             return;
         }
 
-        listener = new SQLiteStudioListener(context, version);
+        listener = new SQLiteStudioListener(context);
         listener.setPort(port);
         listener.setPassword(password);
         listener.setIpBlackList(ipBlackList);
