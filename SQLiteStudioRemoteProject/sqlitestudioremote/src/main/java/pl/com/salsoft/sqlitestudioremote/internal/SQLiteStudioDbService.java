@@ -34,11 +34,13 @@ public class SQLiteStudioDbService {
 
     private final static Pattern DOWNGRADE_PATT = Pattern.compile(".*downgrade\\s+database\\s+from\\s+version\\s+(\\d+)\\s+to\\s+(\\d+)");
 
-    private HashMap<String,SQLiteDatabase> managedDatabases = new HashMap<>();
+    private HashMap<String, SQLiteDatabase> managedDatabases = new HashMap<>();
     private Context context;
+    private int version;
 
-    public SQLiteStudioDbService(Context context) {
+    public SQLiteStudioDbService(Context context, int version) {
         this.context = context.getApplicationContext();
+        this.version = version;
     }
 
     public List<String> getDbList() {
@@ -116,7 +118,7 @@ public class SQLiteStudioDbService {
 
         SQLiteDatabase db = null;
         try {
-            db = tryToGetDb(name, 1);
+            db = tryToGetDb(name, version);
         } catch (SQLiteException e) {
             // If this is "cannot downgrade" problem, try to open with target version.
             String msg = e.getMessage();

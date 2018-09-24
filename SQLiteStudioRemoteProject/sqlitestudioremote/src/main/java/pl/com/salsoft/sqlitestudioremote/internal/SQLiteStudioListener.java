@@ -30,13 +30,15 @@ public class SQLiteStudioListener implements Runnable, ClientJobContainer {
     private BlockingDeque<Runnable> jobsQueue;
     private List<ClientHandler> clientJobs;
     private Context context;
+    private int version;
     private String password;
     private List<String> ipWhiteList;
     private List<String> ipBlackList;
     private AuthService authService;
 
-    public SQLiteStudioListener(Context context) {
+    public SQLiteStudioListener(Context context, int version) {
         this.context = context;
+        this.version = version;
     }
 
     public void setPort(int port) {
@@ -82,7 +84,7 @@ public class SQLiteStudioListener implements Runnable, ClientJobContainer {
         while (isRunning()) {
             try {
                 Socket clientSocket = serverSocket.accept();
-                ClientHandler clientHandler = new ClientHandler(clientSocket, context, this, authService);
+                ClientHandler clientHandler = new ClientHandler(clientSocket, context, this, authService, version);
                 clientJobs.add(clientHandler);
                 threadPool.execute(clientHandler);
             } catch (IOException e) {
@@ -98,7 +100,7 @@ public class SQLiteStudioListener implements Runnable, ClientJobContainer {
             serverSocket = new ServerSocket(port, 5);
             serverSocket.setSoTimeout(interval);
         } catch (IOException e) {
-            Log.e(Utils.LOG_TAG, "Error while opening listening socket: "+e.getMessage(), e);
+            Log.e(Utils.LOG_TAG, "Error while opening listening socket: " + e.getMessage(), e);
             return false;
         }
 
